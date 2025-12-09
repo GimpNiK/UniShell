@@ -2,10 +2,7 @@ import types
 import builtins
 import pytest
 
-try:
-	import FileAlchemy.Windows.regedit as wr
-except Exception:
-	import FileAlchemy.winregex as wr
+import FileAlchemy.Windows.regedit as wr
 
 
 class FakeReg:
