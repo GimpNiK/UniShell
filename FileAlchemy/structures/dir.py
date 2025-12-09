@@ -30,7 +30,8 @@ class Dir:
         new_path = self.path.parent / new_name
         self.path.rename(new_path)
         self.path = new_path
-
+    def on_disk(self):
+        return self.path.exists()
     def chmod(self, mode: int):
         """Изменяет права доступа к файлу или директории."""
         if not self.path.exists():

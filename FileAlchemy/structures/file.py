@@ -134,7 +134,8 @@ class File(Stream):
         suffixes = self.path.suffixes
         return "".join(suffixes) if suffixes else ""
 
-    
+    def on_disk(self):
+        return self.path.exists()
     def sizeof(self) -> int:
         """Размер в байтах"""
         return self.path.stat().st_size
