@@ -1,1 +1,1 @@
-from .regedit import User, CurUser, Users  # noqa: F401
+from .regedit import *

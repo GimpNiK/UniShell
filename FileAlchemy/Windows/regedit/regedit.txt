@@ -1,0 +1,454 @@
+import os
+import subprocess
+import sys
+from typing import Dict, List, Optional,Iterator
+
+
+import winreg  # type: ignore
+import win32api  # type: ignore
+import win32security  # type: ignore
+import win32net  # type: ignore
+import win32netcon  # type: ignore
+import ctypes
+
+
+'''
+User - пользователь // инициализация пользователя по имени/sid(User(id = ...))
+CurUser - текущий пользователь
+Users - все пользователи на компьютере
+
+Список атрибутов:
+User.id - SID пользователя
+User.name - имя пользователя
+User.domain - домен пользователя
+User.type - тип пользователя
+
+Users.(names / all) - список имен пользователей на компьютере
+
+Список функций:
+User(name = "Имя пользователя") - создает объект User
+User.create(name = "Имя пользователя", password = "Новый пароль") - создает пользователя ->User
+User.password.chg(old = "",new = "") - меняет пароль пользователя
+User.delete() - удаляет пользователя
+
+Автозапуск программ:
+CurUser
+User
+Users
+	 .AutoRun      - автозапуск программы при входе в систему
+	 .AutoRunOnce  - автозапуск программы один раз
+				 .add(name = "Имя программы", path = "Путь к программе") - добавляет программу в автозапуск
+				 .remove(name = "Имя программы") - удаляет программу из автозапуска
+				 .all - словарь программ в автозапуске (имя - путь)
+
+Добавление в контекстное меню:
+CurUser
+User
+Users
+	 .ContextMenu - контекстное меню
+				 .add(name = "Имя программы", path = "Путь к программе") - добавляет программу в контекстное меню
+				 .remove(name = "Имя программы") - удаляет программу из контекстного меню
+				 .all - словарь программ в контекстном меню (имя - путь)
+
+Добавление типов файлов(ассоциаций):
+CurUser
+User
+Users
+	 .FileType  - ассоциации типов файлов
+			  .add(extension = ".txt", name = "Имя программы", path = "Путь к программе") - добавляет ассоциацию
+			  .remove(extension = ".txt") - удаляет ассоциацию
+			  .all - словарь ассоциаций (расширение - программа)
+'''
+class User:
+	_id :str|None = ""
+
+	def __init__(self, id = None, name = None, domain = ""):
+		domain = None if domain == "" else domain
+
+		if domain and domain in (win32api.GetComputerName(), ".", ""):
+			domain = None
+		
+		if id and type(self).exists(id, domain = domain): # type: ignore
+			self._id = id
+		elif name:
+			locations = [domain] if domain is not None else [None]
+			if domain is not None:
+				locations.append(None)
+			
+			for try_domain in locations:
+				try:
+					sid, found_domain, use = win32security.LookupAccountName(try_domain, name)
+					self._id = win32security.ConvertSidToStringSid(sid)
+					return
+				except win32security.error:
+					continue
+			
+			raise ValueError(f"Not found user sid = {id}, domain = {domain}, name = {name}")
+		else:
+			raise ValueError(f"Not found user sid = {id}, domain = {domain}, name = {name}")
+
+	@classmethod
+	def create(cls, name: str = "", password: str = "",
+			   domain = None, 
+			   full_name: str = "", description: str = "", 
+			   flags: int = win32netcon.UF_NORMAL_ACCOUNT | win32netcon.UF_SCRIPT,
+			   priv: int = win32netcon.USER_PRIV_USER) -> "User":
+		"""
+		Создает нового пользователя Windows.
+		
+		Args:
+			name: Имя пользователя (обязательно)
+			password: Пароль (пустая строка = пароль не требуется)
+			full_name: Полное имя пользователя
+			description: Описание
+			flags: Флаги учетной записи
+			priv: Уровень привилегий			
+		"""
+		user_info = {
+			'name': name,
+			'password': password,
+			'priv': priv,
+			'home_dir': None,
+			'comment': description,
+			'flags': flags,
+			'script_path': None
+		}
+		
+		if full_name:
+			user_info['full_name'] = full_name
+		
+		win32net.NetUserAdd(
+			domain,
+			1,              # уровень информации
+			user_info
+		)
+		print(win32net.error)	
+		return User(name = name)
+	
+	def delete(self):
+		win32net.NetUserDel(self.domain, self.name) # type: ignore
+	
+	def password_chg(self, old: str, new: str, domain = "") -> bool:
+		netapi32 = ctypes.windll.netapi32
+		result = netapi32.NetUserChangePassword(
+			None if domain == "" else domain,
+			self.name,
+			old,
+			new
+		)
+		return result == 0 
+
+	@staticmethod
+	def getCurUserSid():
+		sid, domain, sid_type = win32security.LookupAccountName(None, win32api.GetUserName())
+		id = win32security.ConvertSidToStringSid(sid)
+		return id
+	@staticmethod
+	def exists(id:str|None = None, name = None, domain = ""):
+		domain = None if domain == "" else domain
+		try:
+			if id: 
+				sid = win32security.ConvertStringSidToSid(id)
+				win32security.LookupAccountSid(domain, sid)
+			elif name:  
+				win32security.LookupAccountName(domain, name)
+			else:
+				return False
+			return True
+		except win32security.error as e:
+			return False
+	
+	
+	#properties
+	def get_id(self):
+		return self._id
+	def set_id(self,value): ...
+	def get_name(self):
+		sid = win32security.ConvertStringSidToSid(self.id) # type: ignore
+		username, domain, sid_type = win32security.LookupAccountSid(None, sid)
+		return username
+	def set_name(self,value): ...
+	def get_domain(self) -> str:
+		sid = win32security.ConvertStringSidToSid(self.id) # type: ignore
+		username, domain, sid_type = win32security.LookupAccountSid(None, sid)
+		return domain
+	def set_domain(self,value): ...
+	def get_type(self):
+		if self._id is None: return None
+		sid = win32security.ConvertStringSidToSid(self.id)
+		username, domain, sid_type = win32security.LookupAccountSid(None, sid)
+
+		type_names = {
+			win32security.SidTypeUser: "User",
+			win32security.SidTypeGroup: "Group",
+			win32security.SidTypeAlias: "Alias",
+			win32security.SidTypeWellKnownGroup: "WellKnownGroup", 
+			win32security.SidTypeComputer: "Computer",
+			win32security.SidTypeDomain: "Domain"
+		}
+
+		return type_names.get(sid_type, None)
+	def set_type(self,value):...
+	
+	id     = property(get_id,set_id,doc = "SID пользователя") #"SID пользователя"
+	name   = property(get_name,set_name)
+	domain = property(get_domain,set_domain)
+	type   = property(get_type,set_type)
+	
+	def __repr__(self):
+		return f"User <id = {self.id},name = {self.name}, domain = {self.domain},type = {self.type}>"
+	
+	PATH = property(lambda self: PATH(self))
+
+
+
+def find_user_in_all_domains(username):
+	"""Ищет пользователя во всех возможных местах"""
+	
+	locations = [
+		(None, "Локальный компьютер"),
+		("", "Локальный компьютер (пустая строка)"),
+		(".", "Текущий компьютер"),
+		(win32api.GetComputerName(), "По имени компьютера"),
+	]
+	
+	for domain, description in locations:
+		try:
+			sid, found_domain, stype = win32security.LookupAccountName(domain, username)
+			print(f"✅ Найден в {description}:")
+			print(f"   Домен: {found_domain}")
+			print(f"   SID: {win32security.ConvertSidToStringSid(sid)}")
+			return sid, found_domain
+		except win32security.error as e:
+			if e.winerror != 1332:  # Не "не найден"
+				print(f"❌ Ошибка в {description}: {e}")
+	
+	print(f"❌ Пользователь '{username}' не найден нигде")
+	return None, None
+
+# Проверь где находится Gimp
+# find_user_in_all_domains("Gimp")
+# print(User(name = "Gimp",domain="W-10-GNA"))
+# user = User.create(name = "Gimp", password = "123")
+# print(user)
+# print(User(name = "Gimp").password_chg(old = "123", new = "1"))
+
+# user = User.create(name = "Gimp", password = "123")
+# print(User(name = "Gimp").password_chg(old = "123", new = "1"))
+# a = input()
+class CurrentUser(User):
+	def __init__(self):
+		self._id = User.getCurUserSid()
+	def get_id(self):
+		return super().get_id()
+	def set_id(self, value):
+		raise ValueError("Must not id CurrentUser")
+	def __repr__(self):
+		return f"Current User <id = {self.id},name = {self.name}, domain = {self.domain},type = {self.type}>"
+	
+class Users:
+	@staticmethod
+	def local() -> list[User]:
+		"""Список пользователей на данном ПК"""
+		server = ""
+		level = 0
+		filter_flag = 0 
+		resume_handle = 0
+		
+
+		result = win32net.NetUserEnum(
+			server, 
+			level, 
+			filter_flag, 
+			resume_handle, 
+		)
+		return [User(name=user['name']) for user in result[0]]
+
+	@staticmethod
+	def all( name = None, domain = None) -> list[User]:...
+	
+	PATH = property(lambda self: PATH(self))
+	@classmethod
+	def __iter__(cls):
+		return cls.local()
+	@classmethod
+	def __repr__(cls) -> str:
+		return f"<Users {cls.local()}>"
+
+		
+class PATH:
+	"""
+	user: CurrentUser | User | Users | User_id:str | None
+	PATH(user).add(path)
+			   .pop(path)
+			   .all()
+	for path in PATH(user):
+		pass
+	for i in range(len(PATH(user))):
+		PATH(user[i])
+	"""
+
+	def __init__(self, user: CurrentUser|User|Users|str|None = None) -> None:
+		self.hive: int
+		self.key_path: str
+
+		if user is None or isinstance(user, CurrentUser):
+			self.hive = winreg.HKEY_CURRENT_USER
+			self.key_path = "Environment"
+		elif isinstance(user, str):  # SID
+			self.hive = winreg.HKEY_USERS
+			self.key_path = f"{user}\\Environment"
+		elif isinstance(user, User):
+			self.hive = winreg.HKEY_USERS
+			self.key_path = f"{user.id}\\Environment"
+		elif isinstance(user, Users):
+			self.hive = winreg.HKEY_LOCAL_MACHINE
+			self.key_path = r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+		else:
+			raise ValueError(f"Invalid user type: {type(user)}")
+
+	def get(self) -> str:
+		try:
+			with winreg.OpenKey(self.hive, self.key_path) as key:
+				value, _ = winreg.QueryValueEx(key, "PATH")
+				return str(value)
+		except FileNotFoundError:
+			return ""
+		except Exception as e:
+			raise RuntimeError(f"Failed to read PATH: {e}") from e
+
+	def _set(self, value: str) -> None:
+		try:
+			with winreg.OpenKey(self.hive, self.key_path, 0, winreg.KEY_WRITE) as key:
+				winreg.SetValueEx(key, "PATH", 0, winreg.REG_EXPAND_SZ, value)
+		except Exception as e:
+			raise RuntimeError(f"Failed to write PATH: {e}") from e
+
+	def add(self, path: str) -> None:
+		paths = self.all()
+		if path not in paths:
+			paths.append(path)
+			self._set(';'.join(paths))
+
+	def pop(self, path: str) -> None:
+		paths = [p for p in self.all() if p != path]
+		self._set(';'.join(paths))
+
+	def all(self) -> List[str]:
+		value = self.get()
+		return [p.strip() for p in value.split(';') if p.strip()]
+
+	def __iter__(self) -> Iterator[str]:
+		return iter(self.all())
+		
+	def __contains__(self, path: str) -> bool:
+		return path in self.all()
+
+	def __len__(self) -> int:
+		return len(self.all())
+
+	def __getitem__(self, index: int|slice) -> str|list[str]:
+		paths = self.all()
+		return paths[index]
+
+	def __repr__(self) -> str:
+		return f"<PATH: {self.all()}>"
+
+	def __str__(self) -> str:
+		return self.get()
+	
+
+class AutoRun:
+	def __init__(self, user: CurrentUser|User|Users|str|None = None) -> None:
+		self.hive: int
+		self.key_path: str
+
+		if user is None or isinstance(user, CurrentUser):
+			self.hive = winreg.HKEY_CURRENT_USER
+			self.key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+		elif isinstance(user, str):  # SID
+			self.hive = winreg.HKEY_USERS
+			self.key_path = f"{user}\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+		elif isinstance(user, User):
+			self.hive = winreg.HKEY_USERS
+			self.key_path = f"{user.id}\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+		elif isinstance(user, Users):
+			self.hive = winreg.HKEY_LOCAL_MACHINE
+			self.key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+		else:
+			raise ValueError(f"Invalid user type: {type(user)}")
+	
+	def get(self, name: str) -> str:
+		"""Получить путь к программе по имени"""
+		with winreg.OpenKey(self.hive, self.key_path) as key:
+			return winreg.QueryValueEx(key, name)[0]
+	
+	def set(self, name: str, path: str) -> None:
+		"""Установить путь для программы (создать или обновить)"""
+		with winreg.OpenKey(self.hive, self.key_path, 0, winreg.KEY_WRITE) as key:
+			winreg.SetValueEx(key, name, 0, winreg.REG_SZ, path)
+	
+	def add(self, name: str, path: str) -> None:
+		"""Добавить программу в автозагрузку (alias для set)"""
+		self.set(name, path)  # Просто вызывает set
+	
+	def pop(self, name: str) -> None:
+		"""Удалить программу из автозагрузки"""
+		with winreg.OpenKey(self.hive, self.key_path, 0, winreg.KEY_WRITE) as key:
+			winreg.DeleteValue(key, name)
+	
+	def all(self) -> dict[str, str]:
+		"""Получить все программы в автозагрузке: {имя: путь}"""
+		result = {}
+		with winreg.OpenKey(self.hive, self.key_path) as key:
+			count = winreg.QueryInfoKey(key)[1]
+			for i in range(count):
+				name, value, _ = winreg.EnumValue(key, i)
+				result[name] = value
+		return result
+	
+	def keys(self) -> list[str]:
+		"""Получить список имен программ"""
+		return list(self.all().keys())
+	
+	def values(self) -> list[str]:
+		"""Получить список путей программ"""
+		return list(self.all().values())
+	
+	def items(self) -> list[tuple[str, str]]:
+		"""Получить список пар (имя, путь)"""
+		return list(self.all().items())
+	
+	def __iter__(self) -> Iterator[str]:
+		"""Итерация по именам программ"""
+		return iter(self.keys())
+	
+	def __len__(self) -> int:
+		"""Количество программ в автозагрузке"""
+		return len(self.keys())
+	
+	def __getitem__(self, key: str|int) -> str:
+		if isinstance(key, int):
+			# По индексу - возвращаем имя программы
+			return self.keys()[key]
+		elif isinstance(key, str):
+			# По имени - возвращаем путь
+			return self.get(key)
+		else:
+			raise TypeError(f"Invalid key type: {type(key)}")
+	
+	def __setitem__(self, name: str, path: str) -> None:
+		self.set(name, path)
+	
+	def __delitem__(self, name: str) -> None:
+		self.pop(name)
+	
+	def __contains__(self, name: str) -> bool:
+		try:
+			self.get(name)
+			return True
+		except:
+			return False
+	
+	def __repr__(self) -> str:
+		return f"<AutoRun: {self.all()}>"
