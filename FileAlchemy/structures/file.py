@@ -8,7 +8,7 @@ from datetime import datetime,timezone
 from typing import Optional,Union,Dict
 
 from .stream import Stream
-from ..encoding_utils import *
+from ..encoding_utils import detect_encoding,determine_minimal_encoding
 
 
 class File(Stream):
@@ -187,43 +187,35 @@ class File(Stream):
 
     @property
     def hidden(self):
-        # Проверяем, существует ли файл
         if not os.path.exists(self.path):
             raise FileNotFoundError(f"Файл '{self.path}' не найден.")
         
-        # Получаем информацию о файле
         file_info = os.stat(self.path)
         
-        # Проверяем на Windows
+
         if os.name == 'nt':
-            # На Windows файл скрыт, если установлен атрибут FILE_ATTRIBUTE_HIDDEN
             return bool(file_info.st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN)
         
-        # Проверяем на Unix-подобных системах
         else:
-            # На Unix-подобных системах файл скрыт, если его имя начинается с '.'
-            return os.path.basename(file_path).startswith('.')
+            return os.path.basename(self.path).startswith('.')
 
 
     def metadata(self) -> Dict[str,Union[bool,int,str,datetime]]:
-        """Метаданные файла"""
-        # Получаем stat один раз для всех свойств
         stat_result = os.stat(self.path)
         
-        # Определяем время создания с учетом платформы
+
         if platform.system() == 'Windows':
             creation_time = os.path.getctime(self.path)
         else:
             creation_time = getattr(stat_result, 'st_birthtime', stat_result.st_mtime)
         
-        # Преобразуем timestamp в datetime один раз
+
         def to_utc(ts:float) -> datetime:
             return datetime.fromtimestamp(ts, tz=timezone.utc)
         
         def to_local(ts:float) -> datetime:
             return datetime.fromtimestamp(ts).astimezone()
         
-        # Определяем скрытость файла
         is_hidden = (
             bool(stat_result.st_file_attributes & stat.FILE_ATTRIBUTE_HIDDEN)
             if os.name == 'nt' 
@@ -231,8 +223,8 @@ class File(Stream):
         ) if hasattr(stat_result, 'st_file_attributes') else self.path.name.startswith('.')
         
         return {
-            'name': self.path.name,  # Используем напрямую вместо вызова self.name
-            'extension': ''.join(self.path.suffixes),  # Прямой доступ вместо self.extension
+            'name': self.path.name,
+            'extension': ''.join(self.path.suffixes),
             'sizeof': stat_result.st_size,
             'created_utc': to_utc(creation_time),
             'modified_utc': to_utc(stat_result.st_mtime),

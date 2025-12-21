@@ -1,6 +1,5 @@
 import os
-from .ViewPort import ViewPort
-import shutil as sh
+from ._internal import ViewPort
 from pathlib import Path
 from typing import Optional, List, Any
 from .encoding_utils import check_bom,detect_encoding,determine_minimal_encoding

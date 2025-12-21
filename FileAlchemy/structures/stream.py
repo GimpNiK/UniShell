@@ -4,7 +4,6 @@ def change_return_methods_None_on_self_(cls : type) -> type:
     
     # Получаем все атрибуты класса
     for attr_name, attr_value in cls.__dict__.items():
-        # Проверяем, является ли атрибут методом
         if callable(attr_value):
             # Определяем новый метод
             def wrapper(*args :List[Any], **kwargs :Dict[Any,Any]):
