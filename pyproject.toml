@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "FileAlchemy"
+name = "UniShell"
 version = "2.1.2"
 description = "Powerful and intuitive Python library for working with files, directories, and text data"
 readme = "README.md"
@@ -56,10 +56,10 @@ windows = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/GimpNiK/FileAlchemy"
-Documentation = "https://github.com/GimpNiK/FileAlchemy"
-Repository = "https://github.com/GimpNiK/FileAlchemy"
-Issues = "https://github.com/GimpNiK/FileAlchemy/issues"
+Homepage = "https://github.com/GimpNiK/UniShell"
+Documentation = "https://github.com/GimpNiK/UniShell"
+Repository = "https://github.com/GimpNiK/UniShell"
+Issues = "https://github.com/GimpNiK/UniShell/issues"
 
 [tool.setuptools]
 # Автоматическое обнаружение пакетов
