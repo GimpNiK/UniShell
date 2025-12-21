@@ -64,10 +64,3 @@ Issues = "https://github.com/GimpNiK/FileAlchemy/issues"
 [tool.setuptools]
 # Автоматическое обнаружение пакетов
 packages = {find = {}}
-
-[tool.setuptools.package-data]
-FileAlchemy = ["*.pyi"]
-FileAlchemy.structures = ["*.pyi"]
-FileAlchemy.Windows = ["*.pyi"]
-FileAlchemy.Windows.regedit = ["*.pyi"]
-
