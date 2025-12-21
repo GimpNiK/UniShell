@@ -90,7 +90,7 @@ def remove(path: Path):
     else:
         raise FileNotFoundError(f"Путь '{path}' не найден.")
 
-def make(path: Path, is_file: bool = None):
+def make(path: Path, is_file: bool|None = None):
     """Создаёт все папки в пути и, если нужно, файл."""
     if is_file is None:
         is_file = path.suffix != ""
@@ -112,7 +112,7 @@ def _ls_mode_str(mode):
     return is_dir + perm
 
 def _ls_owner_group(stat):
-    if sys.platform.startswith('win'):
+    if sys.platform == "win32":
         import getpass
         user = getpass.getuser()
         return user, user

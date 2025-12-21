@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import winreg  
 from typing import Iterator, TYPE_CHECKING
 

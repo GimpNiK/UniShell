@@ -96,7 +96,7 @@ class Archive:
                     yield name.replace('\\', '/')
         elif self.format in ('tar', 'tar.gz', 'tar.bz2'):
             mode = 'r:' + self.format.split('.')[-1] if '.' in self.format else 'r'
-            with tarfile.open(self.path, mode) as tf:
+            with tarfile.open(self.path, mode) as tf: # type: ignore
                 for from_path in tf.getmembers():
                     yield from_path.name.replace('\\', '/')
         elif self.format == 'rar':

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import stat
 from  pathlib import Path
@@ -16,9 +18,13 @@ class File(Stream):
     Класс для работы с отдельным файлом.
     Позволяет читать, записывать, очищать содержимое и перекодировать файл.
     """
-    def __init__(self, path: Path | str, encoding: str = 'utf-8'):
+    def __init__(self, path: Path | str | "File", encoding: str|None = None):
+        if isinstance(path, File):
+            encoding = path.encoding
+            path = path.path
+
         self.path = Path(path)
-        self.encoding = encoding
+        self.encoding = encoding or 'utf-8'
     
     def __str__(self) -> str:
         """Возвращает путь к файлу в виде строки."""

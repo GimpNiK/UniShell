@@ -8,7 +8,7 @@ def check_bom(data: bytes) -> Optional[str]:
     if data.startswith(b'\xFE\xFF'):      # UTF-16 BE
         return 'utf-16'
     return None
-def detect_encoding(path: Path|str, sample_size: int = 65536) -> str:
+def detect_encoding(path: Path|str, sample_size: int = 65536,ignore_errors = False) -> str:
     path = Path(path)
     try:
         import chardet
@@ -29,6 +29,8 @@ def detect_encoding(path: Path|str, sample_size: int = 65536) -> str:
         return result['encoding'] or 'utf-8'
     except ImportError:
         raise ImportError("Для автоматического определения кодировки установите chardet")
+    except:
+        return None
 
 
 # Глобальная функция для определения минимальной кодировки

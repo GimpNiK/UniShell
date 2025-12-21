@@ -22,8 +22,8 @@ class ViewPort:
         if name in os.environ:
             del os.environ[name]
     
-    @property
-    def parms(self) -> Dict[str, Any]:
+    
+    def all(self) -> Dict[str, Any]:
         """Возвращает объединённый словарь всех параметров"""
         return {
             **os.environ,

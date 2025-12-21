@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import winreg  
 from typing import Iterator, TYPE_CHECKING
 
@@ -29,8 +31,12 @@ class AutoRun:
 	
 	def pop(self, name: str) -> None:
 		"""Удалить программу из автозагрузки"""
-		with winreg.OpenKey(self.hive, self.key_path, 0, winreg.KEY_WRITE) as key:
-			winreg.DeleteValue(key, name)
+		try:
+			with winreg.OpenKey(self.hive, self.key_path, 0, winreg.KEY_WRITE) as key:
+				winreg.DeleteValue(key, name)
+		except FileNotFoundError:
+			# Значение уже не существует, игнорируем
+			pass
 	
 	def all(self) -> dict[str, str]:
 		"""Получить все программы в автозагрузке: {имя: путь}"""

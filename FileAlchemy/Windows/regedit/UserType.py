@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import winreg  # type: ignore
 import win32api  # type: ignore
 import win32security  # type: ignore
