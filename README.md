@@ -1,6 +1,6 @@
 # FileAlchemy
 
-**FileAlchemy v. 1.1.1** — A powerful and intuitive Python library for working with files, directories, and text data. Provides two API styles: shell-style with automatic path expansion (UniShell) and Python-style (structures module).
+**FileAlchemy v. 2.1.1** — A powerful and intuitive Python library for working with files, directories, and text data. Provides two API styles: shell-style with automatic path expansion (UniShell) and Python-style (structures module).
 
 ## Two API Styles
 
