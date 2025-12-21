@@ -45,7 +45,7 @@ classifiers = [
 
 dependencies = [
     "chardet>=5.0.0",
-    "py7zr>=0.20.0",
+    "py7zr>=1.0.0",
     "pyzipper>=0.3.6",
     "rarfile>=4.0",
 ]
