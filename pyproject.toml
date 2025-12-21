@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "FileAlchemy"
+version = "1.1.1"
+description = "Powerful and intuitive Python library for working with files, directories, and text data"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "GimpNiK"}
+]
+keywords = [
+    "file",
+    "directory",
+    "archive",
+    "encoding",
+    "filesystem",
+    "windows",
+    "registry",
+    "shell",
+    "unix",
+    "cmd"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "chardet>=5.0.0",
+    "py7zr>=0.20.0",
+    "pyzipper>=0.3.6",
+    "rarfile>=4.0",
+]
+
+[project.optional-dependencies]
+windows = [
+    "pywin32>=300",
+]
+
+[project.urls]
+Homepage = "https://github.com/GimpNiK/FileAlchemy"
+Documentation = "https://github.com/GimpNiK/FileAlchemy"
+Repository = "https://github.com/GimpNiK/FileAlchemy"
+Issues = "https://github.com/GimpNiK/FileAlchemy/issues"
+
+[tool.setuptools]
+# Автоматическое обнаружение пакетов
+packages = {find = {}}
+
+[tool.setuptools.package-data]
+FileAlchemy = ["*.pyi"]
+FileAlchemy.structures = ["*.pyi"]
+FileAlchemy.Windows = ["*.pyi"]
+FileAlchemy.Windows.regedit = ["*.pyi"]
+

@@ -1,0 +1,9 @@
+include LICENSE
+include README.md
+include README.ru.md
+include requirements.txt
+include pytest.ini
+recursive-include FileAlchemy *.pyi
+recursive-include tests *.py
+recursive-include tests *.md
+

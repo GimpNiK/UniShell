@@ -45,6 +45,9 @@
 
 ## Установка
 
+```bash
+pip install FileAlchemy
+```
 
 Требования:
 - Python 3.10+ (рекомендуется 3.11+)
@@ -96,7 +99,9 @@ file = File("test.txt")
 file.content = "Привет, мир!"
 print(file.content)
 
-
+# Работа с группой файлов
+files = Files("1.txt", "2.txt", "3.txt")
+combined_content = files.content  # Объединенное содержимое
 
 # Работа с директорией
 dir = Dir("my_folder")
@@ -118,8 +123,7 @@ archive.add_file("new_file.txt")
 shell = UniShell(
     sep="\n",               # Разделитель по умолчанию для операций с текстом
     current_dir=".",        # Начальная рабочая директория(по умолчанию, места нахождения проекта)
-    default_encoding="utf-8", # Кодировка по умолчанию
-    autodetect_encoding = False #Автоматически определять кодировку (тратит ресурсы требует chardet)
+    default_encoding="utf-8" # Кодировка по умолчанию
 )
 ```
 
@@ -127,8 +131,9 @@ shell = UniShell(
 
 #### Работа с файлами
 
-- `file(path)` - создает объект File для работы с файлом
-- `files(*paths)` - создает объект Files для работы с группой файлов
+- `file(path)` - создает объект для работы с файлом
+- `files(*paths)` - создает объект для работы с группой файлов
+- `text(content="")` - создает объект для работы с текстом
 
 
 #### Операции с файлами(методы UniShell)
@@ -170,7 +175,7 @@ shell = UniShell()
 my_var = shell.parms["~"]
 shell.parms["my_var"] = my_var #локальную по значению
 shell.parms["my var"] = lambda: my_var # локальную по ссылке
-shell.parms.set_gl("my_var",my_var) # глобальную по значению
+shell.parms.set_gl("my_var") = my_var # глобальную по значению
 shell.ls(path = "%my_var%") #выведет список файлов в домашней директории
 ```
 ### Перегрузка операторов
@@ -193,7 +198,6 @@ shell.file("1and2.txt") << shell.files("1.txt","2.txt")
 
 ```python
 # Автоматическое определение кодировки
-shell.parms["autodetect_encoding"] = True
 file_obj = shell.file("unknown.txt")
 print(file_obj.encoding)  # например, "utf-8" или "cp1251"
 
@@ -283,7 +287,7 @@ print(f"Файлы в архиве: {list(archive.list_files())}")
 2. **Автовосстановление** - автоматическое определение кодировки при ошибках чтения
 3. **Безопасность** - проверка существования файлов перед операциями
 4. **Кроссплатформенность** - единое API для разных операционных систем
-5. **Два уровня API** - стиль Shell с автоматическим расширением путей (UniShell) и orm (structures)
+5. **Два уровня API** - высокоуровневый (UniShell) и низкоуровневый (structures)
 6. **Потоковые операции** - поддержка операторов >>, >, <<, < для работы с содержимым
 
 **В процессе разработки:** 
