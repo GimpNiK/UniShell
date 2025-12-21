@@ -4,6 +4,7 @@ from typing import Iterator, TYPE_CHECKING
 if TYPE_CHECKING:
     from .UserType import CurrentUser, User, Users
 class PATH:
+	_regpath = r"Environment"
 	"""
 	user: CurrentUser | User | Users | User_id:str | None
 	PATH(user).add(path)
@@ -16,25 +17,16 @@ class PATH:
 	"""
 
 	def __init__(self, user: "CurrentUser|User|Users|str|None" = None) -> None:
-		from .UserType import CurrentUser, User, Users
+		from .UserType import Users, _get_winreg_hkey, _get_winreg_subkey
 		
-		self.hive: int
-		self.key_path: str
 
-		if user is None or isinstance(user, CurrentUser):
-			self.hive = winreg.HKEY_CURRENT_USER
-			self.key_path = "Environment"
-		elif isinstance(user, str):  # SID
-			self.hive = winreg.HKEY_USERS
-			self.key_path = f"{user}\\Environment"
-		elif isinstance(user, User):
-			self.hive = winreg.HKEY_USERS
-			self.key_path = f"{user.id}\\Environment"
-		elif isinstance(user, Users):
+		self.hive = _get_winreg_hkey(user)
+		self.key_path = _get_winreg_subkey(user) + "\\" if _get_winreg_subkey(user) else "" + self._regpath
+		
+		if isinstance(user, Users):
 			self.hive = winreg.HKEY_LOCAL_MACHINE
 			self.key_path = r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-		else:
-			raise ValueError(f"Invalid user type: {type(user)}")
+
 
 	def get(self) -> str:
 		try:

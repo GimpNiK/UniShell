@@ -158,6 +158,7 @@ class User:
 		from .AutoRunOnce import AutoRunOnce as stdAutoRunOnce
 		return stdAutoRunOnce(self)
 
+
 class CurrentUser(User):
 	def __init__(self):
 		self._id = User.getCurUserSid()
@@ -165,8 +166,10 @@ class CurrentUser(User):
 		return super().get_id()
 	def set_id(self, value):
 		raise ValueError("Must not id CurrentUser")
+	
 	def __repr__(self):
 		return f"Current User <id = {self.id},name = {self.name}, domain = {self.domain},type = {self.type}>"
+	
 
 
 
@@ -204,7 +207,7 @@ class Users:
 	def AutoRunOnce(self):
 		from .AutoRunOnce import AutoRunOnce as stdAutoRunOnce
 		return stdAutoRunOnce(self)
-		
+	
 	@classmethod
 	def __iter__(cls):
 		return iter(cls.local())
@@ -212,3 +215,26 @@ class Users:
 	@classmethod
 	def __repr__(cls) -> str:
 		return f"<Users {cls.local()}>"
+
+def _get_winreg_hkey(user: "CurrentUser|User|Users|str|None") -> int:
+	if isinstance(user, str):
+		return winreg.HKEY_USERS
+	elif isinstance(user, CurrentUser):
+		return winreg.HKEY_CURRENT_USER
+	elif isinstance(user, User):
+		return winreg.HKEY_USERS
+	elif isinstance(user, Users):
+		return winreg.HKEY_LOCAL_MACHINE
+	else:
+		raise ValueError(f"Invalid user type: {type(user)}")
+def _get_winreg_subkey(user: "CurrentUser|User|Users|str|None") -> str:
+	if isinstance(user, str):
+		return user
+	elif isinstance(user, CurrentUser):
+		return ""
+	elif isinstance(user, User):
+		return user.id
+	elif isinstance(user, Users):
+		return ""
+	else:
+		raise ValueError(f"Invalid user type: {type(user)}")

@@ -5,26 +5,13 @@ if TYPE_CHECKING:
     from .UserType import CurrentUser, User, Users
 
 class AutoRun:
+	_regpath = r"Software\Microsoft\Windows\CurrentVersion\Run"
 	def __init__(self, user: "CurrentUser|User|Users|str|None" = None) -> None:
-		from .UserType import CurrentUser, User, Users
+		from .UserType import _get_winreg_hkey, _get_winreg_subkey
 		
-		self.hive: int
-		self.key_path: str
-
-		if user is None or isinstance(user, CurrentUser):
-			self.hive = winreg.HKEY_CURRENT_USER
-			self.key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-		elif isinstance(user, str):  # SID
-			self.hive = winreg.HKEY_USERS
-			self.key_path = f"{user}\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
-		elif isinstance(user, User):
-			self.hive = winreg.HKEY_USERS
-			self.key_path = f"{user.id}\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
-		elif isinstance(user, Users):
-			self.hive = winreg.HKEY_LOCAL_MACHINE
-			self.key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-		else:
-			raise ValueError(f"Invalid user type: {type(user)}")
+		self.hive = _get_winreg_hkey(user)
+		self.key_path = _get_winreg_subkey(user) + "\\" if _get_winreg_subkey(user) else "" + self._regpath
+		
 	
 	def get(self, name: str) -> str:
 		"""Получить путь к программе по имени"""
