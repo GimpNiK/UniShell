@@ -16,6 +16,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/GimpNiK/FileAlchemy",
+    # Note: Some dependencies use LGPL, ISC, and PSF licenses.
+    # All are compatible with MIT. See LICENSES_DEPENDENCIES.md for details.
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
