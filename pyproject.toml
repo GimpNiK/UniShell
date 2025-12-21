@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "FileAlchemy"
-version = "1.1.1"
+name = "UniShell"
+version = "2.1.2"
 description = "Powerful and intuitive Python library for working with files, directories, and text data"
 readme = "README.md"
 requires-python = ">=3.10"
