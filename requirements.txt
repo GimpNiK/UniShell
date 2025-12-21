@@ -1,5 +1,0 @@
-chardet
-py7zr
-pyzipper
-rarfile
-pywin32
