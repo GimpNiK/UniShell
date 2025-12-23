@@ -1,6 +1,8 @@
 name: Publish Packages
 
-on: release
+on:
+  release:
+    types: [published]
 
 jobs:
   publish:
@@ -15,22 +17,67 @@ jobs:
         with:
           python-version: '3.10'
           
-      - run: pip install build
+      # 1. Устанавливаем ВСЕ необходимые инструменты ДО цикла
+      - name: Install build and publishing tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
       
-      - name: Build and publish
+      - name: Build and publish all packages
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           
           for dir in unishell unishell-win unishell-unix; do
+            echo "================================"
             echo "Building $dir..."
-            cd $dir
+            echo "================================"
+            
+            if [ ! -d "$dir" ]; then
+              echo "❌ Directory $dir not found!"
+              continue
+            fi
+            
+            cd "$dir"
+            
+            # 2. Создаем README.md если его нет (чтобы избежать warnings)
+            if [ ! -f "README.md" ]; then
+              echo "Creating placeholder README.md..."
+              echo "# $dir" > README.md
+              echo "Version: $VERSION" >> README.md
+            fi
+            
+            # 3. Обновляем версию и зависимости для win/unix пакетов
             if [ "$dir" != "unishell" ]; then
+              echo "Updating version and dependencies..."
               sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
               sed -i "s/unishell>=.*/unishell>=$VERSION/" pyproject.toml
+              
+              # 4. Также обновляем формат лицензии на SPDX
+              if grep -q 'license = {text = "MIT"}' pyproject.toml; then
+                echo "Updating license format to SPDX..."
+                sed -i 's/license = {text = "MIT"}/license = "MIT"/' pyproject.toml
+              fi
             fi
+            
+            # 5. Обновляем лицензию и в основном пакете
+            if grep -q 'license = {text = "MIT"}' pyproject.toml; then
+              echo "Updating license format to SPDX..."
+              sed -i 's/license = {text = "MIT"}/license = "MIT"/' pyproject.toml
+            fi
+            
+            # 6. Собираем пакет
+            echo "Building package..."
             python -m build
-            twine upload --non-interactive --username __token__ --password $PYPI_TOKEN dist/*
+            
+            # 7. Публикуем на PyPI
+            echo "Uploading to PyPI..."
+            twine upload --non-interactive --verbose dist/*
+            
             cd ..
+            echo "✅ $dir published successfully!"
+            echo ""
           done
         env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+          # 8. Для безопасности используйте секретное имя PYPI_API_TOKEN
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
