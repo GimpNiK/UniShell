@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from FileAlchemy import file_utils as fu
+from unishell import sh as fu
 
 
 def test_mkdir_and_ls(tmp_path: Path):
@@ -14,7 +14,7 @@ def test_mkdir_and_ls(tmp_path: Path):
     # create files
     (d / "x.txt").write_text("x")
     (d / "y.txt").write_text("y")
-    names = fu.ls(d).split(" ")
+    names = fu.ls(d)
     assert set(names) >= {"x.txt", "y.txt"}
 
 

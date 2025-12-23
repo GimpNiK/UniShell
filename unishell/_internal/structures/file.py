@@ -9,7 +9,7 @@ from datetime import datetime,timezone
 
 from typing import Optional,Union,Dict
 
-from .stream import Stream
+from ..stream import Stream
 from ..encoding_utils import detect_encoding,determine_minimal_encoding
 
 
@@ -70,6 +70,7 @@ class File(Stream):
     def create(self, mode: int = 438, ignore_errors: bool = True):
         """Создаёт пустой файл по указанному пути."""
         self.path.touch(mode = mode,exist_ok = ignore_errors)
+        return self
     def remove(self):
         """Удаляет файл по указанному пути."""
         self.path.unlink()

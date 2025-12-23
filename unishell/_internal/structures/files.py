@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .stream import Stream
+from ..stream import Stream
 from .file import File
 from pathlib import Path
 

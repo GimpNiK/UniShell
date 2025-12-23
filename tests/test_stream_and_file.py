@@ -5,8 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from FileAlchemy.structures.stream import Stream
-from FileAlchemy.structures.file import File
+from unishell._internal.stream import Stream
+from unishell import File
 
 
 def test_stream_ops_with_file(tmp_path: Path):

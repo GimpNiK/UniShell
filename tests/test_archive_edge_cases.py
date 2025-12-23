@@ -1,14 +1,12 @@
 import sys
 import os
-import tempfile
-import shutil
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from FileAlchemy.structures.archive import Archive
+from unishell import Archive
 
 
 def test_archive_with_very_long_filenames(tmp_path: Path):

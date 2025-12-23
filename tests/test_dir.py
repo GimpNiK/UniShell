@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from FileAlchemy.structures.dir import Dir
+from unishell import Dir
 
 
 def test_dir_create_move_rename(tmp_path: Path):
@@ -37,7 +37,7 @@ def test_dir_magic_div_and_iter(tmp_path: Path):
     assert str(sub).endswith(os.path.sep)
 
     # __iter__ отдает File/Dir
-    names = {x.path.name if hasattr(x, "path") else Path(x).name for x in d}
+    names = {Path(str(x)).name for x in d}
     assert names >= {"a.txt", "sub"}
 
 

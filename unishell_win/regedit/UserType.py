@@ -1,11 +1,14 @@
 from __future__ import annotations
-
-import winreg  # type: ignore
-import win32api  # type: ignore
-import win32security  # type: ignore
-import win32net  # type: ignore
-import win32netcon  # type: ignore
 import ctypes
+try:
+	import winreg  
+	import win32api 
+	import win32security  
+	import win32net  
+	import win32netcon  
+except ImportError:
+	print("Not found module pywin32. pip install pywin32")
+	
 class User:
 	_id :str|None = ""
 
@@ -240,3 +243,6 @@ def _get_winreg_subkey(user: "CurrentUser|User|Users|str|None") -> str:
 		return ""
 	else:
 		raise ValueError(f"Invalid user type: {type(user)}")
+
+
+

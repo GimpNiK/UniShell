@@ -1,4 +1,8 @@
-from ..structures import Dir,File,Archive
+from .._internal.structures import Dir,File,Archive
+try:
+    from unishell_win import Users,CurUser
+except ImportError:
+    print("Not found module: 'unishell_win'. pip install unishell_win")
 import sys
 NAME_PROJECT = "Project"
 VERSION_PROJECT = "1.1.1"
@@ -51,7 +55,7 @@ class Config:
         )
 
 
-from ..Windows import Users,CurUser
+
 def install_program(DIR_FOR_PROJECT:str = None,ALL_USERS = True, PATH = [],FileType = [], ContextMenu = {"File": [], "Dir": []},**kwargs): # type: ignore
     
     DIR_FOR_PROJECT:Dir = Dir(DIR_FOR_PROJECT or BASE_DIR_FOR_PROJECT)

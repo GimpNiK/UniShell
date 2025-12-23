@@ -8,11 +8,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from FileAlchemy.structures.archive import Archive
-from FileAlchemy.structures.file import File
-from FileAlchemy.structures.dir import Dir
-from FileAlchemy import file_utils as fu
-from FileAlchemy.encoding_utils import detect_encoding, determine_minimal_encoding
+from unishell import Archive
+from unishell import File
+from unishell import Dir
+from unishell._internal import file_utils as fu
+from unishell._internal.encoding_utils import detect_encoding, determine_minimal_encoding
 
 
 def test_full_workflow_with_encoding_detection(tmp_path: Path):

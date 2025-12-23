@@ -8,12 +8,10 @@ from typing import Dict,Any
 from pathlib import Path
 class Dir:
     def __init__(self, path: "Dir|Path|str"):
-        if isinstance(path,Dir):
-            self.path = path.path
-        else:
-            self.path = Path(path)
-            if self.path.suffix !="":
-                raise ValueError(f"Путь {path} не является папкой")
+        path = str(path)
+        self.path = Path(path)
+        if self.path.suffix !="":
+            raise ValueError(f"Путь {path} не является папкой")
 
     def create(self, mode: int = 0o777, parents: bool = False, ignore_errors: bool = False):
         """Создаёт директорию по указанному пути."""

@@ -1,54 +1,38 @@
 from __future__ import annotations
 
 import os
-from ._internal import ViewPort
 from pathlib import Path
-from typing import Optional, List, Any
-from .encoding_utils import check_bom,detect_encoding,determine_minimal_encoding
-from .file_utils import copy, mkdir, mkfile, rmfile, rmdir, make_archive, extract_archive, chmod, nano, make, remove, ls
-from .structures import *
+from typing import Optional
+
+from ._internal.file_utils import copy, mkdir, mkfile, rmfile, rmdir, make_archive, extract_archive, chmod, nano, make, remove, ls
+
+from ._internal.ViewPort import ViewPort
+
+
+
 class UniShell:
 
+	def file(self, path: str | Path, encoding: str|None = None):
+		from .__init__ import File
+		return File(path, encoding,shell = self)
 	
-	
-
-	# def text(self, content: str = "", encoding: Optional[str] = None) -> _text:
-	# 	"""
-	# 	Создаёт объект _text для работы с текстом в памяти.
-	# 	:param content: Исходный текст
-	# 	:param encoding: Кодировка (по умолчанию — default_encoding)
-	# 	:return: объект _text
-	# 	"""
-	# 	enc = encoding or self.parms["default_encoding"]
-	# 	return UniShell._text(content, enc, self)
-
-	def file(self, path: str | Path, encoding: str|None = None) -> File:
-		path = self.to_abspath(path)
-		enc = encoding or path and self.parms["autodect_encoding"] and detect_encoding(path, ignore_errors = True) or self.parms["default_encoding"]
-		
-		return File(path, enc)
-	def files(self, *files:str|Path|File, encoding: str|None = None, sep = "\n") -> Files:
-		def abspath(file):
-			if isinstance(file, File):
-				return file
-			file = self.to_abspath(file) or file
-			return file
-		
-		return Files(*map(lambda file: abspath(file), files), encoding = encoding, sep = sep)
+	def files(self, *files:"str|Path|File", encoding: str|None = None, sep = "\n"): # type: ignore
+		from .__init__ import Files
+		return Files(*files,encoding = encoding,sep = sep,shell = self)
 
 
-		
+	parms:ViewPort
 		
 	def __init__(
 		self,
 		sep: str = "\n",
-		current_dir: str | Path = os.getcwd(),
+		current_dir = os.getcwd(),
 		default_encoding: str = 'utf-8',
 		autodetect_encoding: bool = False,
 		parms :ViewPort = ViewPort()
 	):
 		
-		self.current_dir = Path(current_dir)
+		self.current_dir = Path(str(current_dir))
 		parms.sets({
 			"~": lambda: Path(os.path.expanduser('~')),
 			"..": lambda: self.current_dir.parent,
@@ -61,14 +45,8 @@ class UniShell:
 
 
 
-	def to_abspath(self, path: str | Path) -> Path:
-		"""
-		Преобразует путь в абсолютный с учётом переменных окружения и специальных обозначений.
-		:param path: Путь (строка или Path)
-		:return: Абсолютный Path
-		"""
-		
-		path = Path(path)
+	def to_abspath(self, path: "str|Path|File|Dir") -> Path:  # pyright: ignore[reportUndefinedVariable]
+		path = Path(str(path))
 		parts = path.parts
 		new_path = Path()
 
@@ -94,7 +72,7 @@ class UniShell:
 		return new_path.absolute()
 
 
-	def cd(self, path: str | Path):
+	def cd(self, path):
 		self.current_dir = self.to_abspath(path)
 		return self
 
@@ -126,7 +104,7 @@ class UniShell:
 				raise
 		return self
 
-	def rmfile(self, path: str | Path, ignore_errors: bool = False):
+	def rmfile(self, path: str | Path , ignore_errors: bool = False):
 		path = self.to_abspath(path)
 		try:
 			rmfile(path)
@@ -240,3 +218,10 @@ class UniShell:
 
 	def __repr__(self):
 		return f"<UniShell cur_dir={self.current_dir}>"
+	
+
+
+
+__all__ = [
+    'UniShell',
+]

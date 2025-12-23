@@ -14,13 +14,14 @@ Version: 1.0.0
 import os
 from pathlib import Path
 from typing import Optional, Union, List, Dict, Any, overload
-from ._internal import ViewPort
-from .structures import File, _files
+from ._internal.ViewPort import ViewPort
+from .__init__ import File, Files, Dir
 
 # Type Aliases
-PathLike = Union[str, Path]
-FilePath = PathLike
-DirPath = PathLike
+PathTp = Union[str, Path]
+FileTp = Union[str, Path, File]
+DirTp =  Union[str, Path, Dir]
+FileDirTp = Union[str, Path, File, Dir]
 Encoding = str
 Mode = int
 ArchiveFormat = str
@@ -50,11 +51,11 @@ class UniShell:
         >>> content = shell.file('data.txt').content
         >>> shell.copy('source/', 'dest/').make_archive('dest/', 'backup.zip')
     """
-    
+    parms : ViewPort
     def __init__(
         self,
         sep: str = "\n",
-        current_dir: Union[str, Path] = os.getcwd(),
+        current_dir: DirTp = os.getcwd(),
         default_encoding: str = 'utf-8',
         autodetect_encoding: bool = False,
         parms: ViewPort = ViewPort()
@@ -92,7 +93,7 @@ class UniShell:
     
     
     
-    def to_abspath(self, path: Union[str, Path]) -> Path:
+    def to_abspath(self, path: FileDirTp) -> Path:
         """
         Convert path to absolute path with variable expansion.
         
@@ -121,7 +122,7 @@ class UniShell:
         ...
     
     # File Operations
-    def file(self, path: Union[str, Path], encoding: Optional[str] = None) -> File:
+    def file(self, path: FileTp, encoding: str|None = None) -> File:
         """
         Create a File object for operations on a single file.
         
@@ -147,7 +148,7 @@ class UniShell:
         """
         ...
     
-    def files(self, *args: Union[str, Path, File], encoding: Optional[str] = None) -> _files:
+    def files(self, *args: FileTp, encoding: str|None = None) -> Files:
         """
         Create a _files object for batch operations on multiple files.
         
@@ -169,7 +170,7 @@ class UniShell:
         ...
     
     # Directory Operations
-    def cd(self, path: Union[str, Path]) -> 'UniShell':
+    def cd(self, path: DirTp) -> 'UniShell':
         """
         Change current working directory.
         
@@ -192,7 +193,7 @@ class UniShell:
     
     def mkdir(
         self,
-        path: Union[str, Path],
+        path: DirTp,
         mode: int = 0o777,
         parents: bool = False,
         exist_ok: bool = False,
@@ -223,7 +224,7 @@ class UniShell:
     
     def rmdir(
         self,
-        path: Union[str, Path],
+        path: FileTp,
         ignore_errors: bool = False,
         onerror: Optional[Any] = None
     ) -> 'UniShell':
@@ -250,8 +251,8 @@ class UniShell:
     # File System Operations
     def copy(
         self,
-        from_path: Union[str, Path],
-        to_path: Union[str, Path],
+        from_path: FileDirTp,
+        to_path: FileDirTp,
         *,
         follow_symlinks: bool = True,
         ignore_errors: bool = False
@@ -284,7 +285,7 @@ class UniShell:
     
     def mkfile(
         self,
-        path: Union[str, Path],
+        path: FileDirTp,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -309,7 +310,7 @@ class UniShell:
     
     def rmfile(
         self,
-        path: Union[str, Path],
+        path: FileDirTp,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -336,11 +337,11 @@ class UniShell:
     # Archive Operations
     def make_archive(
         self,
-        from_path: Union[str, Path],
-        to_path: Optional[Union[str, Path]] = None,
+        from_path: FileDirTp,
+        to_path: FileTp|None = None,
         format: str = "zip",
-        owner: Optional[str] = None,
-        group: Optional[str] = None,
+        owner: str|None = None,
+        group: str|None = None,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -373,9 +374,9 @@ class UniShell:
     
     def extract_archive(
         self,
-        archive_path: Union[str, Path],
-        extract_dir: Optional[Union[str, Path]] = None,
-        format: Optional[str] = None,
+        archive_path: FileTp,
+        extract_dir: FileTp|None = None,
+        format: str|None = None,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -406,7 +407,7 @@ class UniShell:
     # Permissions and Attributes
     def chmod(
         self,
-        path: Union[str, Path],
+        path: FileTp,
         mode: int,
         ignore_errors: bool = False
     ) -> 'UniShell':
@@ -437,9 +438,9 @@ class UniShell:
     # Encoding Operations
     def recode(
         self,
-        file_path: Union[str, Path],
+        file_path: FileTp,
         to_encoding: str,
-        from_encoding: Optional[str] = None,
+        from_encoding: str|None = None,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -468,7 +469,7 @@ class UniShell:
     # Utility Operations
     def nano(
         self,
-        path: Union[str, Path],
+        path: FileTp,
         edit_txt: str = "notepad",
         ignore_errors: bool = False
     ) -> 'UniShell':
@@ -496,7 +497,7 @@ class UniShell:
     
     def remove(
         self,
-        path: Union[str, Path],
+        path: FileDirTp,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -520,8 +521,8 @@ class UniShell:
     
     def make(
         self,
-        path: Union[str, Path],
-        is_file: Optional[bool] = None,
+        path: FileDirTp,
+        is_file: bool|None = None,
         ignore_errors: bool = False
     ) -> 'UniShell':
         """
@@ -544,16 +545,16 @@ class UniShell:
         ...
     
     @overload
-    def ls(self, path: Union[str, Path] = ".", details: bool = False, 
+    def ls(self, path: DirTp = ".", details: bool = False, 
            ignore_errors: bool = False) -> List[str]: ...
     
     @overload
-    def ls(self, path: Union[str, Path] = ".", details: bool = True,
+    def ls(self, path: DirTp = ".", details: bool = True,
            ignore_errors: bool = False) -> Dict[str, Any]: ...
     
     def ls(
         self,
-        path: Union[str, Path] = ".",
+        path: DirTp = ".",
         details: bool = False,
         ignore_errors: bool = False
     ) -> Union[List[str], Dict[str, Any]]:
@@ -655,3 +656,4 @@ class UniShell:
             String in format: <UniShell cur_dir=/path/to/dir>
         """
         ...
+sh: UniShell

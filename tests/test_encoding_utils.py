@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from FileAlchemy.encoding_utils import check_bom, detect_encoding, determine_minimal_encoding
+from unishell import check_bom, detect_encoding, determine_minimal_encoding
 
 
 def test_check_bom_variants():
