@@ -1,8 +1,9 @@
-name: Publish Packages
+name: Publish All UniShell Packages
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -17,67 +18,128 @@ jobs:
         with:
           python-version: '3.10'
           
-      # 1. Устанавливаем ВСЕ необходимые инструменты ДО цикла
-      - name: Install build and publishing tools
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install build twine
       
-      - name: Build and publish all packages
+      - name: Fix license classifiers in all packages
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           
           for dir in unishell unishell-win unishell-unix; do
-            echo "================================"
-            echo "Building $dir..."
-            echo "================================"
-            
             if [ ! -d "$dir" ]; then
-              echo "❌ Directory $dir not found!"
+              echo "⚠️ Skipping: $dir not found"
               continue
             fi
             
-            cd "$dir"
+            echo "========================================"
+            echo "🔧 Fixing: $dir"
+            echo "========================================"
             
-            # 2. Создаем README.md если его нет (чтобы избежать warnings)
-            if [ ! -f "README.md" ]; then
-              echo "Creating placeholder README.md..."
+            pushd "$dir" > /dev/null
+            
+            # 1. Убедимся, что есть pyproject.toml
+            if [ ! -f "pyproject.toml" ]; then
+              echo "❌ ERROR: pyproject.toml not found in $dir"
+              exit 1
+            fi
+            
+            # 2. Обновляем версию
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+            
+            # 3. Обновляем формат лицензии (если ещё не обновлено)
+            sed -i 's/license = {text = "MIT"}/license = "MIT"/g' pyproject.toml
+            
+            # 4. УДАЛЯЕМ устаревшие классификаторы лицензий
+            echo "Removing license classifiers..."
+            
+            # Создаем временный файл
+            python3 -c "
+import tomllib
+import tomli_w
+
+with open('pyproject.toml', 'rb') as f:
+    data = tomllib.load(f)
+
+# Удаляем классификаторы лицензий из списка classifiers
+if 'project' in data and 'classifiers' in data['project']:
+    license_classifiers = [
+        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: MIT',
+        'License :: MIT License'
+    ]
+    
+    new_classifiers = [
+        c for c in data['project']['classifiers'] 
+        if c not in license_classifiers
+    ]
+    
+    # Обновляем только если что-то изменилось
+    if len(new_classifiers) != len(data['project']['classifiers']):
+        data['project']['classifiers'] = new_classifiers
+        print(f'Removed {len(data[\"project\"][\"classifiers\"]) - len(new_classifiers)} license classifiers')
+    else:
+        print('No license classifiers found')
+
+with open('pyproject.toml', 'wb') as f:
+    tomli_w.dump(data, f)
+"
+            
+            # 5. Для win/unix пакетов обновляем зависимость от unishell
+            if [ "$dir" != "unishell" ]; then
+                sed -i "s/^unishell>=.*/unishell>=$VERSION/" pyproject.toml
+            fi
+            
+            popd > /dev/null
+          done
+      
+      - name: Build and publish packages
+        run: |
+          set -e  # Выход при ошибке
+          VERSION="${GITHUB_REF#refs/tags/}"
+          
+          for dir in unishell unishell-win unishell-unix; do
+            if [ ! -d "$dir" ]; then
+              echo "⚠️ Skipping: $dir not found"
+              continue
+            fi
+            
+            echo "========================================"
+            echo "🛠️ Building: $dir"
+            echo "========================================"
+            
+            pushd "$dir" > /dev/null
+            
+            # Проверяем конфигурацию перед сборкой
+            echo "🔍 Final configuration check..."
+            echo "License: $(grep '^license =' pyproject.toml || echo 'Not found')"
+            echo "Version: $(grep '^version =' pyproject.toml)"
+            
+            # Проверяем, остались ли классификаторы лицензий
+            if grep -q "License :: OSI Approved" pyproject.toml; then
+              echo "❌ ERROR: License classifiers still present!"
+              echo "Found: $(grep 'License :: OSI Approved' pyproject.toml)"
+              exit 1
+            fi
+            
+            # Создаем README если нужно
+            if [ ! -f "README.md" ] && grep -q 'readme = "README.md"' pyproject.toml; then
+              echo "📖 Creating README.md..."
               echo "# $dir" > README.md
               echo "Version: $VERSION" >> README.md
             fi
             
-            # 3. Обновляем версию и зависимости для win/unix пакетов
-            if [ "$dir" != "unishell" ]; then
-              echo "Updating version and dependencies..."
-              sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
-              sed -i "s/unishell>=.*/unishell>=$VERSION/" pyproject.toml
-              
-              # 4. Также обновляем формат лицензии на SPDX
-              if grep -q 'license = {text = "MIT"}' pyproject.toml; then
-                echo "Updating license format to SPDX..."
-                sed -i 's/license = {text = "MIT"}/license = "MIT"/' pyproject.toml
-              fi
-            fi
-            
-            # 5. Обновляем лицензию и в основном пакете
-            if grep -q 'license = {text = "MIT"}' pyproject.toml; then
-              echo "Updating license format to SPDX..."
-              sed -i 's/license = {text = "MIT"}/license = "MIT"/' pyproject.toml
-            fi
-            
-            # 6. Собираем пакет
-            echo "Building package..."
+            # Собираем и публикуем
+            echo "🔨 Building package..."
             python -m build
             
-            # 7. Публикуем на PyPI
-            echo "Uploading to PyPI..."
+            echo "🚀 Uploading to PyPI..."
             twine upload --non-interactive --verbose dist/*
             
-            cd ..
-            echo "✅ $dir published successfully!"
+            popd > /dev/null
+            echo "✅ Successfully published $dir"
             echo ""
           done
         env:
-          # 8. Для безопасности используйте секретное имя PYPI_API_TOKEN
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
