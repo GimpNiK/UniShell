@@ -26,7 +26,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           
-          for dir in unishell unishell-win unishell-unix; do
+          for dir in unishell unishell_win unishell_unix; do
             echo "Fixing $dir..."
             cd "$dir"
             
@@ -53,7 +53,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           
-          for dir in unishell unishell-win unishell-unix; do
+          for dir in unishell unishell_win unishell_unix; do
             echo "Building $dir..."
             cd "$dir"
             
