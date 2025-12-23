@@ -22,123 +22,51 @@ jobs:
         run: |
           pip install build twine
       
-      - name: Fix license classifiers in all packages
+      - name: Fix packages
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           
           for dir in unishell unishell-win unishell-unix; do
-            if [ ! -d "$dir" ]; then
-              echo "⚠️ Skipping: $dir not found"
-              continue
-            fi
+            echo "Fixing $dir..."
+            cd "$dir"
             
-            echo "========================================"
-            echo "🔧 Fixing: $dir"
-            echo "========================================"
-            
-            pushd "$dir" > /dev/null
-            
-            # 1. Убедимся, что есть pyproject.toml
-            if [ ! -f "pyproject.toml" ]; then
-              echo "❌ ERROR: pyproject.toml not found in $dir"
-              exit 1
-            fi
-            
-            # 2. Обновляем версию
+            # Update version
             sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
             
-            # 3. Обновляем формат лицензии (если ещё не обновлено)
+            # Update license format
             sed -i 's/license = {text = "MIT"}/license = "MIT"/g' pyproject.toml
             
-            # 4. УДАЛЯЕМ устаревшие классификаторы лицензий
-            echo "Removing license classifiers..."
+            # Remove license classifiers using simple sed
+            sed -i '/License :: OSI Approved :: MIT License/d' pyproject.toml
+            sed -i '/License :: OSI Approved :: MIT/d' pyproject.toml
+            sed -i '/License :: MIT License/d' pyproject.toml
             
-            # Создаем временный файл
-            python3 -c "
-import tomllib
-import tomli_w
-
-with open('pyproject.toml', 'rb') as f:
-    data = tomllib.load(f)
-
-# Удаляем классификаторы лицензий из списка classifiers
-if 'project' in data and 'classifiers' in data['project']:
-    license_classifiers = [
-        'License :: OSI Approved :: MIT License',
-        'License :: OSI Approved :: MIT',
-        'License :: MIT License'
-    ]
-    
-    new_classifiers = [
-        c for c in data['project']['classifiers'] 
-        if c not in license_classifiers
-    ]
-    
-    # Обновляем только если что-то изменилось
-    if len(new_classifiers) != len(data['project']['classifiers']):
-        data['project']['classifiers'] = new_classifiers
-        print(f'Removed {len(data[\"project\"][\"classifiers\"]) - len(new_classifiers)} license classifiers')
-    else:
-        print('No license classifiers found')
-
-with open('pyproject.toml', 'wb') as f:
-    tomli_w.dump(data, f)
-"
-            
-            # 5. Для win/unix пакетов обновляем зависимость от unishell
+            # For win/unix packages, update dependency
             if [ "$dir" != "unishell" ]; then
-                sed -i "s/^unishell>=.*/unishell>=$VERSION/" pyproject.toml
+              sed -i "s/^unishell>=.*/unishell>=$VERSION/" pyproject.toml
             fi
             
-            popd > /dev/null
+            cd ..
           done
       
-      - name: Build and publish packages
+      - name: Build and publish
         run: |
-          set -e  # Выход при ошибке
           VERSION="${GITHUB_REF#refs/tags/}"
           
           for dir in unishell unishell-win unishell-unix; do
-            if [ ! -d "$dir" ]; then
-              echo "⚠️ Skipping: $dir not found"
-              continue
-            fi
+            echo "Building $dir..."
+            cd "$dir"
             
-            echo "========================================"
-            echo "🛠️ Building: $dir"
-            echo "========================================"
-            
-            pushd "$dir" > /dev/null
-            
-            # Проверяем конфигурацию перед сборкой
-            echo "🔍 Final configuration check..."
-            echo "License: $(grep '^license =' pyproject.toml || echo 'Not found')"
-            echo "Version: $(grep '^version =' pyproject.toml)"
-            
-            # Проверяем, остались ли классификаторы лицензий
-            if grep -q "License :: OSI Approved" pyproject.toml; then
-              echo "❌ ERROR: License classifiers still present!"
-              echo "Found: $(grep 'License :: OSI Approved' pyproject.toml)"
-              exit 1
-            fi
-            
-            # Создаем README если нужно
-            if [ ! -f "README.md" ] && grep -q 'readme = "README.md"' pyproject.toml; then
-              echo "📖 Creating README.md..."
+            # Create README if needed
+            if [ ! -f "README.md" ]; then
               echo "# $dir" > README.md
               echo "Version: $VERSION" >> README.md
             fi
             
-            # Собираем и публикуем
-            echo "🔨 Building package..."
             python -m build
-            
-            echo "🚀 Uploading to PyPI..."
             twine upload --non-interactive --verbose dist/*
             
-            popd > /dev/null
-            echo "✅ Successfully published $dir"
-            echo ""
+            cd ..
           done
         env:
           TWINE_USERNAME: __token__
