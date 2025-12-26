@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional,Literal
 
 def check_bom(data: bytes) -> Optional[str]:
     """Check for Byte Order Mark in binary data."""
@@ -25,11 +25,9 @@ def detect_encoding(
         with path.open('rb') as f:
             raw_data = f.read(sample_size)
         
-        # Check BOM first
         if bom_encoding := check_bom(raw_data):
             return bom_encoding
         
-        # Detect using chardet
         result = chardet.detect(raw_data)
         
         if result['confidence'] < 0.7:
@@ -44,7 +42,7 @@ def detect_encoding(
             return None
         raise
 
-def determine_minimal_encoding(content: str) -> str:
+def determine_minimal_encoding(content: str) -> Literal["ascii","cp1251","utf-8"]:
     """Determine the minimal encoding that supports the content."""
     try:
         content.encode('ascii')

@@ -1,5 +1,5 @@
-class StubClass:
-    """Класс-заглушка, который поглощает любые обращения"""
+class FakeObj:
+    """A stub class that absorbs any calls. Return when the functionality is not available on this OS."""
     
     def __getattr__(self, name):
         return self
@@ -11,7 +11,7 @@ class StubClass:
         return self
     
     def __setattr__(self, name, value):
-        object.__setattr__(self, name, value)
+        pass
     
     def __iter__(self):
         return iter([])
@@ -23,10 +23,10 @@ class StubClass:
         return 0
     
     def __str__(self):
-        return "<Stub>"
+        return "<Fake>"
     
     def __repr__(self):
-        return "<Stub>"
+        return "<Fake>"
     
     def __bool__(self):
         return False
