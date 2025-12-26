@@ -514,3 +514,5 @@ class Archive:
                 archive.add(item)
         return archive
     
+    def __str__(self) -> str:
+        return str(self.path)

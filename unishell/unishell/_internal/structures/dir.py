@@ -46,7 +46,7 @@ class Dir:
             os.chmod(self.path, mode)
     
     def __truediv__(self, name: str):
-        from .file import File
+        from ...__init__ import File
         if name == "":
             return self
         elif name[-1] == "/" or name[-1] == "\\" and Path(name).suffix =="":
@@ -59,7 +59,7 @@ class Dir:
             if path.is_file():
                 yield File(path)
             elif path.is_dir():
-                yield Dir(path)
+                yield type(self)(path)
             else:
                 yield path
     def __str__(self):

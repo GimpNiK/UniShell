@@ -45,10 +45,3 @@ __all__ = [
     'Path',
 ]
 
-# Для статических анализаторов можно добавить
-__annotations__ = {
-    'sh': 'UniShell',
-    'UniShell': 'Type[UniShell]',
-    'File': 'Type[File]',
-    'Files': 'Type[Files]',
-}
