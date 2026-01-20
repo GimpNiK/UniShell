@@ -8,7 +8,7 @@ try:
 	import win32netcon  
 except ImportError:
 	print("Not found module pywin32. pip install pywin32")
-	
+
 class User:
 	_id :str|None = ""
 
@@ -244,5 +244,5 @@ def _get_winreg_subkey(user: "CurrentUser|User|Users|str|None") -> str:
 	else:
 		raise ValueError(f"Invalid user type: {type(user)}")
 
-
+UserTp = User|Users|CurrentUser|str|None
 
