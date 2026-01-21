@@ -25,18 +25,11 @@ def shell_function():
     file.create()
     file.content = "data"
 ```
-### Installation for all OS (recommended for development)
+### Installation 
 ```bash
 pip install unishell
 ```
-### Installation for Windows only
-```bash
-pip install unishell_win
-```
-### Installation only for Linux (Unix systems)
-```bash
-pip install unishell_unix
-```
+
 ### Main modules
 1. Working with files and folders    
     Create, edit, delete, move, copy files and folders with automatic path expansion.
@@ -61,7 +54,7 @@ pip install unishell_unix
     Create and delete users by SID, change passwords. Edit PATH, AutoRun, and AutoRunOnce.
     CurrentUser, User, Users
     ```python
-    from unishell import CurUser, User, Users,PATH, AutoRun, AutoRunOnce
+    from unishell.regedit import CurUser, User, Users,PATH, AutoRun, AutoRunOnce
     ```
     Dependencies: pywin32(PSF)  
 
