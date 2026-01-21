@@ -5,7 +5,7 @@ if platform.system() != "Windows":
         return FakeObj()
 else:
     try:
-        from unishell_win import *
+        from unishell_win.regedit import *
     except ImportError:
         raise ImportError("Not found module unishell_win. pip install unishell_win")
     

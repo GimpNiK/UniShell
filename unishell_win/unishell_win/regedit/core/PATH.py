@@ -1,11 +1,6 @@
-from __future__ import annotations
-
-import winreg  
-from typing import Iterator, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .UserType import CurrentUser, User, Users
+from .UserType import UserTp,Users
 from .Regedit import RegPage
+
 class PATH(RegPage):
 	_regpath = r"Environment"
 	"""
@@ -19,7 +14,7 @@ class PATH(RegPage):
 		PATH(user[i])
 	"""
 
-	def __init__(self, user: "CurrentUser|User|Users|str|None" = None) -> None:
+	def __init__(self, user: UserTp = None) -> None:
 
 		if isinstance(user, Users):
 			self._regpath = r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"

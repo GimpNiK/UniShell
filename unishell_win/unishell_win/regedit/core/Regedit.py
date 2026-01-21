@@ -289,7 +289,7 @@ class RegPage:
 
 	def get(self,name:str):
 		""" Получает значение поля у ключа:
-			HKEY_CURRENT_USER\SOFTWARE\7-Zip\Compression\Options\7z , Level -> 5
+			HKEY_CURRENT_USER\\SOFTWARE\\7-Zip\\Compression\\Options\\7z , Level -> 5
 			Reg_SZ -> list
 		"""
 		return self._regedit[name]

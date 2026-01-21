@@ -41,12 +41,15 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
-dependencies = [
-    "unishell_win >= 2.2.1",
-    "unishell_unix >= 2.2.1"
+[project.optional-dependencies]
+windows = [
+    "unishell_win>=2.2.1",
+]
+linux = [
+    "unishell_unix>=2.2.1",
 ]
 
-[project.optional-dependencies]
+
 
 [project.urls]
 Homepage = "https://github.com/GimpNiK/UniShell"

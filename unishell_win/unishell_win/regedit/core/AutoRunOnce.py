@@ -1,4 +1,4 @@
 from .Regedit import RegPage
 
-class AutoRun(RegPage):
+class AutoRunOnce(RegPage):
 	_regpath = r"Software\Microsoft\Windows\CurrentVersion\RunOnce"

@@ -1,8 +1,9 @@
 project_root = r"C:\Users\ПК\Desktop\UniShell\unishell"
 import sys
 sys.path.insert(0, project_root)
-import unishell as uni
+project_root = r"C:\Users\ПК\Desktop\UniShell\unishell_win"
+sys.path.insert(0, project_root)
 
-from unishell.regedit import AutoRun
-print(AutoRun)
-print()
+from unishell.regedit import Environment
+
+print(Environment.json())

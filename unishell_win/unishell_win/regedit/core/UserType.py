@@ -149,12 +149,12 @@ class User:
 		return f"User <id = {self.id},name = {self.name}, domain = {self.domain},type = {self.type}>"
 
 	@property
-	def PATH(self) -> "PATH":
+	def PATH(self):
 		from .PATH import PATH as stdPATH
 		return stdPATH(self)
 	
 	@property
-	def AutoRun(self) -> "AutoRun":
+	def AutoRun(self):
 		from .AutoRun import AutoRun as stdAutoRun
 		return stdAutoRun(self)
 	
