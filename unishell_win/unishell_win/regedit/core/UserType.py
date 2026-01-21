@@ -224,7 +224,7 @@ class Users:
 def _get_winreg_hkey(user: "CurrentUser|User|Users|str|None") -> int:
 	if isinstance(user, str):
 		return winreg.HKEY_USERS
-	elif isinstance(user, CurrentUser):
+	elif user is None or isinstance(user, CurrentUser):
 		return winreg.HKEY_CURRENT_USER
 	elif isinstance(user, User):
 		return winreg.HKEY_USERS
@@ -235,7 +235,7 @@ def _get_winreg_hkey(user: "CurrentUser|User|Users|str|None") -> int:
 def _get_winreg_subkey(user: "CurrentUser|User|Users|str|None") -> str:
 	if isinstance(user, str):
 		return user
-	elif isinstance(user, CurrentUser):
+	elif user is None or isinstance(user, CurrentUser):
 		return ""
 	elif isinstance(user, User):
 		return user.id
@@ -245,4 +245,5 @@ def _get_winreg_subkey(user: "CurrentUser|User|Users|str|None") -> str:
 		raise ValueError(f"Invalid user type: {type(user)}")
 
 UserTp = User|Users|CurrentUser|str|None
+CurUser = CurrentUser()
 

@@ -5,6 +5,7 @@ from typing import Optional, Union, List, Dict, Any
 from reg_types import *
 from reg_types import _REG_TYPE_AUTO, _REG_TYPE_INT,_REG_TYPE_STR
 
+from UserType import _get_winreg_hkey,_get_winreg_subkey,UserTp
 _HKEY_INT = {
     "HKCU": winreg.HKEY_CURRENT_USER,
     "HKU":  winreg.HKEY_USERS,
@@ -37,17 +38,14 @@ class Container:
         return Container(self.hive, new_path)
     
     def __getitem__(self, name: str) -> Optional[Any]:
-        """Get field value"""
         field = Field(self, name)
         return field.get()
     
     def __setitem__(self, name: str, value: Any):
-        """Set field value"""
         field = Field(self, name)
         field.set(value)
     
     def __delitem__(self, name: str):
-        """Delete field"""
         field = Field(self, name)
         field.delete()
     
@@ -64,7 +62,6 @@ class Container:
             raise Exception(f"Error opening container: {e}")
     
     def create(self):
-        """Create container"""
         try:
             if self.path:
                 winreg.CreateKey(self.hive, self.path)
@@ -108,13 +105,13 @@ class Container:
         else:
             parent = Container(self.hive, "")
         
-        data = self.json()
+        data = self.json(use_types=True)
         
         new_path = f"{parent.path}\\{new_name}" if parent.path else new_name
         new_container = Container(self.hive, new_path)
         new_container.create()
         
-        new_container.from_json(data)
+        new_container.from_json(data, use_types=True)
         
         old_container = Container(self.hive, self.path)
         old_container.delete()
@@ -124,31 +121,30 @@ class Container:
 
     
     def containers(self):
-        try:
-            with self._open() as key:
-                i = 0
-                while True:
-                    try:
-                        yield winreg.EnumKey(key, i)
-                        i += 1
-                    except OSError:
-                        break
-        except Exception:
-            return []
+        result = []
+
+        with self._open() as key:
+            i = 0
+            while True:
+                try:
+                    result.append( winreg.EnumKey(key, i))
+                    i += 1
+                except OSError:
+                    break
+        return result
     
     def fields(self):
-        try:
-            with self._open() as key:
-                i = 0
-                while True:
-                    try:
-                        name, _, _ = winreg.EnumValue(key, i)
-                        yield name
-                        i += 1
-                    except OSError:
-                        break
-        except Exception:
-            return []
+        result = []
+        with self._open() as key:
+            i = 0
+            while True:
+                try:
+                    name, _, _ = winreg.EnumValue(key, i)
+                    result.append(name)
+                    i += 1
+                except OSError:
+                    break
+        return result
     
     def json(self, use_types = False) -> Dict[str, Any]:
         """Export container to JSON"""
@@ -180,11 +176,7 @@ class Container:
             else:
                 (self / reg_el).from_json(data[reg_el], use_types = use_types)
         
-                
-
-    
     def exists(self) -> bool:
-        """Check if container exists"""
         try:
             with self._open():
                 return True
@@ -193,9 +185,7 @@ class Container:
         
     def __repr__(self) -> str:
         return f"Container({_HKEY_STR[self.hive]}\\{self.path})"
-
 class Field:
-    """Registry field (value)"""
     
     def __init__(self, container: Container, name: str):
         self.container = container
@@ -278,75 +268,15 @@ class Field:
         return f"Field({self.container}\\{self.name})"
 
 
-
-
 class Regedit:
     
-    def __init__(self, hive: Union[int, str]):
+    def __new__(cls, hive: int|str|UserTp) -> Container:
+        path = ""
         if isinstance(hive, str):
-            hive = _HKEY_INT[hive.upper()]
-        self.hive = hive
-    
-    def __truediv__(self, path: str) -> Container:
-        return Container(self.hive, path)
+            hive = _HKEY_INT.get(hive.upper())
+        if not isinstance(hive, int):
+            path = _get_winreg_subkey(hive)
+            hive = _get_winreg_hkey(hive)
+        return Container(hive,path)
 
 
-# Example usage
-if __name__ == "__main__":
-    # 1. Create container
-    container = Container(winreg.HKEY_CURRENT_USER, "SOFTWARE")
-    
-    # 2. Navigation with /
-    test_container = container / "TestApp"
-    
-    # 3. Work with fields using type aliases
-    field1 = Field(test_container, "field1")
-    field2 = Field(test_container, "field2")
-    field3 = Field(test_container, "field3")
-    field4 = Field(test_container, "field4")
-    field5 = Field(test_container, "field5")
-    field6 = Field(test_container, "field6")
-    # Set values with type aliases
-    field1.set("String", STRING)  # String
-    field2.set(42, INTEGER)  # 32-bit integer
-    field3.set(9999999999, LONG_INT)  # 64-bit integer
-    field4.set([ "string1", "string2" ], STRINGS)  # Multi-string
-    field5.set(b'\x00\x01\x02', BINARY)  # Binary data
-    field6.set("%PATH%", PATH)  # Expandable string
-    
-    # 4. Get value
-    value = field1.get()
-    print(f"Value: {value}, type: {type(value)}")
-    
-    # 5. Automatic type detection
-    #field.set(100)  # Automatically detects as INTEGER
-    #field.set("Text")  # Automatically detects as STRING
-    #field.set([ "item1", "item2" ])  # Automatically detects as STRINGS
-    
-    # 6. Use Regedit for convenience
-    reg = Regedit("HKCU")
-    software = reg / "SOFTWARE" / "Microsoft" / "Windows"
-    print(f"Path: {software.path}")
-    
-
-    
-    # 8. Work with containers
-    if test_container.exists():
-        print(f"Container exists")
-    
-    # 9. List containers and fields
-    print(f"Containers in SOFTWARE: {list(container.containers())[:5]}...")
-    
-    # 10. JSON export/import
-    json_data = test_container.json()
-    from pprint import pprint
-    pprint(test_container.json(use_types=False))
-    
-    # Create new container from JSON
-    new_container = container / "TestAppCopy"
-    new_container.from_json(json_data, use_types = False)
-    print()
-    test_container["(По умолчанию)"] = [1,2]
-    new_container.delete()
-    test_container.delete()
-    print()
