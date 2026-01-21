@@ -1,4 +1,4 @@
-name: Publish All UniShell Packages
+name: Publish UniShell Packages
 
 on:
   release:
@@ -13,91 +13,21 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
-      - name: Install dependencies
-        run: |
-          pip install build twine
-      
-      - name: Fix packages
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          
-          for dir in unishell unishell_win unishell_unix; do
-            echo "Fixing $dir..."
-            cd "$dir"
-            
-            # Update version
-            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
-            
-            # Update license format
-            sed -i 's/license = {text = "MIT"}/license = "MIT"/g' pyproject.toml
-            
-            # Remove license classifiers using simple sed
-            sed -i '/License :: OSI Approved :: MIT License/d' pyproject.toml
-            sed -i '/License :: OSI Approved :: MIT/d' pyproject.toml
-            sed -i '/License :: MIT License/d' pyproject.toml
-            
-            # For win/unix packages, update dependency
-            if [ "$dir" != "unishell" ]; then
-              sed -i "s/^unishell>=.*/unishell>=$VERSION/" pyproject.toml
-            fi
-            
-            cd ..
-          done
       
       - name: Build and publish
         run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          
           for dir in unishell unishell_win unishell_unix; do
-            echo "=== Processing $dir ==="
-            
-            if [ ! -d "$dir" ]; then
-              echo "Directory $dir not found, skipping..."
-              continue
+            if [ -d "$dir" ]; then
+              echo "Publishing $dir..."
+              cd "$dir"
+              python -m build
+              python -m twine upload --skip-existing dist/*
+              cd ..
             fi
-            
-            cd "$dir"
-            
-            # Clean previous builds
-            echo "Cleaning previous builds..."
-            rm -rf dist/ build/ *.egg-info/
-            
-            # Create README if needed
-            if [ ! -f "README.md" ]; then
-              echo "# $dir" > README.md
-              echo "Version: $VERSION" >> README.md
-            fi
-            
-            # Build package
-            echo "Building package..."
-            python -m build
-            
-            # Publish with --skip-existing flag
-            echo "Publishing to PyPI..."
-            if twine upload --skip-existing --non-interactive --verbose dist/*; then
-              echo "✅ Successfully published $dir $VERSION"
-            else
-              EXIT_CODE=$?
-              if [ $EXIT_CODE -eq 0 ]; then
-                echo "⚠️  Package $dir $VERSION already exists, skipped"
-              else
-                echo "❌ Failed to publish $dir"
-                # Continue with other packages even if one fails
-                # Remove this line if you want to stop on first error
-                continue
-              fi
-            fi
-            
-            cd ..
-            echo ""
           done
-          
-          echo "=== All packages processed ==="
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
