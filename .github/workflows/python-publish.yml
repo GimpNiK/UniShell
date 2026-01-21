@@ -13,15 +13,24 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
+      - name: Install build tools
+        run: |
+          pip install build twine
+      
       - name: Build and publish
         run: |
+          # Устанавливаем пакеты для сборки
+          pip install build twine
+          
+          # Публикуем каждый пакет
           for dir in unishell unishell_win unishell_unix; do
             if [ -d "$dir" ]; then
-              echo "Publishing $dir..."
+              echo "Публикация $dir..."
               cd "$dir"
               python -m build
               python -m twine upload --skip-existing dist/*
