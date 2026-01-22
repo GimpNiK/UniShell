@@ -1,4 +1,4 @@
-from .Regedit import RegPage
+from .Registry import RegPage
 from .UserType import UserTp,Users
 
 class Environment(RegPage):

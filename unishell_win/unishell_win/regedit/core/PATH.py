@@ -1,5 +1,5 @@
 from .UserType import UserTp,Users
-from .Regedit import RegPage
+from .Registry import RegPage
 
 class PATH(RegPage):
 	_regpath = r"Environment"

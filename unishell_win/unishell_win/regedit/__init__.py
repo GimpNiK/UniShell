@@ -1,5 +1,5 @@
 from .core.UserType import CurrentUser, User, Users,CurUser
-from .core.Regedit import Regedit
+from .core.Registry import Registry
 
 from .core.Environment import Environment as stdEnvironment
 from .core.PATH        import PATH        as stdPATH

@@ -267,7 +267,7 @@ class Field:
 		return f"Field({self.container}\\{self.name})"
 
 
-class Regedit:
+class Registry:
 	
 	def __new__(cls, hive: int|str|UserTp) -> Container:
 		path = ""
@@ -283,7 +283,7 @@ class RegPage:
 	_regpath : str
 	_regedit : Container
 	def __init__(self, user: UserTp = None) -> None:
-		self._regedit = Regedit(user) / self._regpath
+		self._regedit = Registry(user) / self._regpath
 
 	
 
