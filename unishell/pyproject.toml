@@ -39,14 +39,14 @@ classifiers = [
     "Topic :: System :: Filesystems",
     "Topic :: Utilities",
 ]
+dependencies = [
+    "unishell_win>=2.3.2; sys_platform == 'win32'",
+    
+    "unishell_unix>=2.2.1; sys_platform == 'linux' or sys_platform == 'darwin'",
+]
 
 [project.optional-dependencies]
-windows = [
-    "unishell_win>=2.2.1",
-]
-linux = [
-    "unishell_unix>=2.2.1",
-]
+
 
 
 
