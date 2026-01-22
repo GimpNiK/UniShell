@@ -48,3 +48,14 @@ def _REG_TYPE_AUTO(value) -> int:
             return PATH
         else:
             return STRING  
+_HKEY_INT = {
+	"HKCU": winreg.HKEY_CURRENT_USER,
+	"HKU":  winreg.HKEY_USERS,
+	"HKLM": winreg.HKEY_LOCAL_MACHINE,
+	"HKCC": winreg.HKEY_CURRENT_CONFIG,
+	"HKCR": winreg.HKEY_CLASSES_ROOT,
+	"HKDD": winreg.HKEY_DYN_DATA,
+	"HKPD": winreg.HKEY_PERFORMANCE_DATA
+}
+
+_HKEY_STR = {v: k for k, v in _HKEY_INT.items()}

@@ -1,21 +1,14 @@
 import winreg
 from typing import Optional, Union, List, Dict, Any
 
-from .reg_types import _REG_TYPE_AUTO, _REG_TYPE_INT,_REG_TYPE_STR, STRING
+from ..reg_types import \
+	_REG_TYPE_AUTO, STRING, \
+    _REG_TYPE_INT,_REG_TYPE_STR, \
+	_HKEY_INT,_HKEY_STR
 from .UserType import _get_winreg_hkey,_get_winreg_subkey,UserTp
 
 
-_HKEY_INT = {
-	"HKCU": winreg.HKEY_CURRENT_USER,
-	"HKU":  winreg.HKEY_USERS,
-	"HKLM": winreg.HKEY_LOCAL_MACHINE,
-	"HKCC": winreg.HKEY_CURRENT_CONFIG,
-	"HKCR": winreg.HKEY_CLASSES_ROOT,
-	"HKDD": winreg.HKEY_DYN_DATA,
-	"HKPD": winreg.HKEY_PERFORMANCE_DATA
-}
 
-_HKEY_STR = {v: k for k, v in _HKEY_INT.items()}
 
 
 
@@ -183,7 +176,7 @@ class Container:
 			return False
 		
 	def __repr__(self) -> str:
-		return f"Container({_HKEY_STR[self.hive]}\\{self.path})"
+		return f"Registry({_HKEY_STR[self.hive]}\\{self.path})"
 class Field:
 	
 	def __init__(self, container: Container, name: str):
