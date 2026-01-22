@@ -42,7 +42,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "unishell>=2.2.1",
+    "unishell>=2.3.3",
 ]
 
 [project.optional-dependencies]

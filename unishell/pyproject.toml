@@ -40,7 +40,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "unishell_win>=2.3.2; sys_platform == 'win32'",
+    "unishell_win>=2.3.3; sys_platform == 'win32'",
     
     "unishell_unix>=2.2.1; sys_platform == 'linux' or sys_platform == 'darwin'",
 ]
